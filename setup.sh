@@ -1,46 +1,83 @@
 #!/bin/sh
 
+# VARS
+allreadyInstalled="already installed!"
+tryingToInstall="trying to install:"
+
+# COLORS
+red='\033[0;31m'
+green='\033[0;32m'
+colorOff='\033[0m'
+cyan='\033[0;36m'
+
+# FUNCTIONS
 printInstallationStep(){
-  colorOff='\033[0m'
-  cyan='\033[0;36m'
-  echo "${cyan}#### $1 #####${colorOff}"
+  echo "$cyan#### $1 #####$colorOff"
+}
+
+printAlreadyInstalled(){
+  echo "$green $1 $colorOff"
 }
 
 appendZshrc(){
   echo "$1" >> ~/.zshrc
 }
 
+installWithBrew(){
+  printInstallationStep "$tryingToInstall $1"
+  brew list "$1"
+  if [ "$?" =  "1" ]
+  then
+    brew install "$1"
+  else
+    printAlreadyInstalled "$alreadyInstalled"
+  fi
+}
+
+installWithBrewCask(){
+  printInstallationStep "$tryingToInstall $1"
+  brew cask list "$1"
+  if [ "$?" =  "1" ]
+  then
+    brew cask install "$1"
+  else
+    printAlreadyInstalled "$alreadyInstalled"
+  fi
+}
+
+### MAIN PROCESS ###
+
 # Install homebrew
-printInstallationStep "Install Homebrew"
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+printInstallationStep "$tryingToInstall Homebrew"
+brew list
+if [ "$?" =  "1" ]
+then
+  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+else
+  printAlreadyInstalled "$alreadyInstalled"
+fi
 
 # Tap cask for homebrow
 printInstallationStep "Homebrew tap cask"
 brew tap caskroom/cask
 
 # Install zsh
-printInstallationStep "install zsh"
-brew install zsh
+installWithBrew zsh
 
 # SET zshell as default
 printInstallationStep "setting zsh as the default shell"
 chsh -s $(which zsh)
 
-# Install google-chrome
-printInstallationStep "Install Google Chrome"
-brew cask install google-chrome
-
-# Install iterm2
-printInstallationStep "Install iterm2"
-brew cask install iterm2
-
 # Install Oh-my-zshell
-printInstallationStep "Install oh-my-zsh"
-sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+printInstallationStep "$tryingToInstall oh-my-zsh"
+if [ -d "$DIRECTORY" ]; then
+  printAlreadyInstalled "$alreadyInstalled"
+else
+  sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+fi
 
 # Install Node version manager
-printInstallationStep "Install Node version manager"
-brew install nvm
+installWithBrew nvm
 
 printInstallationStep "Update .zshrc configuration for NVM"
 appendZshrc "#NVM"
@@ -51,7 +88,7 @@ printInstallationStep "Source .zshrc"
 source ~/.zshrc
 
 # Download --lts of Node.js
-printInstallationStep "Install latest Node.js version"
+printInstallationStep "$tryingToInstall latest Node.js version"
 nvm install --lts
 
 # Use nvm global default
@@ -60,19 +97,18 @@ nvm use default
 
 # Use --lts always --> .zshrc
 printInstallationStep "Update .zshrc to use latest version of node.js"
-
 appendZshrc "nvm use default"
 
 # Install openjdk8
-printInstallationStep "Install OpenJDK 8"
-brew cask install adoptopenjdk8
+installWithBrewCask adoptopenjdk8
 
 # Install jenv
-printInstallationStep "Install JENV"
-brew install jenv
+installWithBrew jenv
 
 # Install jenv export and maven
 printInstallationStep "Install JENV plugins"
+jenv enable-plugin maven
+jenv enable-plugin export
 
 # Set global java_home to jdk8
 printInstallationStep "Use OpenJDK as default"
@@ -88,40 +124,27 @@ appendZshrc 'jenv global $(jenv versions | grep -o "openjdk64-1.8.[0-9]*.[0-9]*"
 printInstallationStep "Source .zshrc"
 source ~/.zshrc
 
+# Install google-chrome
+printInstallationStep "Skipping Google-Chrome"
+#installWithBrewCask google-chrome
+
+# Install iterm2
+installWithBrewCask iterm2
+
 # Install maven
-printInstallationStep "Install maven"
-brew install maven
+installWithBrew maven
 
 # Install gradle
-printInstallationStep "Install gradle"
-brew install gradle
+installWithBrew gradle
 
 # Install postman
-printInstallationStep "Install postman"
-brew cask install postman
+installWithBrewCask postman
 
 # Install intellij toolbox
-printInstallationStep "Install intellij toolbox"
-brew cask install jetbrains-toolbox
+installWithBrewCask jetbrains-toolbox
 
 # Install intellij community edition
-printInstallationStep "Install intellij ce"
-brew cask install intellij-idea-ce
+installWithBrewCask intellij-idea-ce
 
 # Install intellij ultimate
-printInstallationStep "Install intellij ultimate"
-brew cask install intellij-idea
-
-### TWU specific ###
-
-# Install Cisco AnyConnect
-printInstallationStep "Cisco AnyConnect"
-
-# Install postgresSQL app and command line tool
-printInstallationStep "Install PostgreSQL"
-
-# Download helloTWU
-
-
-
-
+installWithBrewCask intellij-idea
